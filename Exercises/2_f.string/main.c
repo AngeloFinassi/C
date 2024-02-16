@@ -2,12 +2,13 @@
 #include <string.h>
 
 int main(void){
-    char answer[100];
-    printf("What's your name?: ");
-    scanf("%s", answer);
+    char asnwer[100];
+    printf("Whats your name? ");
+    scanf("%s", &asnwer);
 
-    int age = 0;
-    printf("What's your Age");
-    scanf("%d", age);
-    printf("hello, %s\n your Age is %d right?", answer, age);
+    int age;
+    printf("What's your Age? ");
+    scanf("%d", &age);
+
+    printf("Your are %c, and have %d old", asnwer, age);
 }
