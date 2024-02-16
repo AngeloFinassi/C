@@ -9,8 +9,8 @@ int main(){
     {
     int num, result, want;
 
-    printf("\nWrite a number: \n");
-    scanf("%d\n", &num);
+    printf("\nWrite a number:");
+    scanf("%d", &num);
 
     for(int i = 0; i <= 10; i++){
         result = num * i;
@@ -18,7 +18,7 @@ int main(){
     }
 
     printf("\n Do you want to repeat? 1/0: ");
-    scanf("%d\n", &want);
+    scanf("%d", &want);
 
     if (want == 1){
         repeat = true;
