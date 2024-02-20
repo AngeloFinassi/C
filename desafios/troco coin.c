@@ -10,7 +10,7 @@ int main(){
 
     int cont_50 = 0, cont_20 = 0, cont_10 = 0, cont_5= 0, cont_1 = 0;
 
-    while(value_troco > 1)
+    while(value_troco >= 1)
     {
         if (value_troco >= 50)
         {
@@ -46,5 +46,7 @@ int main(){
             }
         }
     }
-    printf("%d - 50, %d - 20, %d - 10, %d - 5, %d - 1", cont_50, cont_20, cont_10, cont_5, cont_1);
+    printf("Num Coins / Value Coins");
+    printf("\n");
+    printf(" %d - 50\n %d - 20\n %d - 10\n %d - 5\n %d - 1", cont_50, cont_20, cont_10, cont_5, cont_1);
 }
