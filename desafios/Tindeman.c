@@ -5,6 +5,7 @@
 int main()
 {   
     //Gets 3 name and save in name_input
+    int n_votes = 2;
     int n_candidate = 3;
     char name_input[n_candidate][10];
     char name[50];
@@ -23,27 +24,32 @@ int main()
         scores[i] = 0;
     }
 
-    for (int j = 0; j < n_candidate; j++)
+    for (int c = 0; c < n_votes; c++)
     {
-        //Gets the vots at a 'vote'
-        printf("\nPreference %d:", j);
-        scanf("%s", &vote);
-
-        //Compare if one candidate recieved a vote
-        for (int y = 0; y < n_candidate; y++)
+        printf("-=-=-=-=-=%d=-=-=-=-=-\n", c + 1);
+        for (int j = 0; j < n_candidate; j++)
         {
-            if(strcmp(name_input[y], vote) == 0)
+            //Gets the vots at a 'vote'
+            printf("\nPreference %d:", j + 1);
+            scanf("%s", &vote);
+
+            //Compare if one candidate recieved a vote
+            for (int y = 0; y < n_candidate; y++)
             {
-                scores[y]++;
-            }g
+                if(strcmp(name_input[y], vote) == 0)
+                {
+                    scores[y]++;
+                }
+            }
         }
     }
+    
     printf("\n");
 
     for (int k = 0; k < n_candidate; k++)
     {
         printf("Name %d: %s\n", k + 1, name_input[k]);
-        printf("score  : %d\n", k + 1, scores[k]);
+        printf("score  : %d\n", scores[k]);
         printf("\n");
     }
 }
