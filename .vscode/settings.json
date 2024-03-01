@@ -60,6 +60,7 @@
   "files.associations": {
     "string.h": "c",
     "ctype.h": "c",
-    "GET.C": "cpp"
+    "GET.C": "cpp",
+    "stdio.h": "c"
   }
 }
