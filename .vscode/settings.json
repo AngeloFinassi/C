@@ -61,6 +61,7 @@
     "string.h": "c",
     "ctype.h": "c",
     "GET.C": "cpp",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "allegro.h": "c"
   }
 }
