@@ -1,17 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-// Esquece isso abaixo cosnegui dps em outro dia kkk ;-;
-//Não consegui fazer, tenho a porra da logica escrita na minha cbç
-//mas simplismente n consigo aplicar com a sintaxe da linguagem C
-//Sinceramente n quero desistir mas pqp
-//todo dia que estudo essa porra me sinto burro e sem entender porra nenhuma
-//agr me vejo aqui desanimado e com dor de cabeça
-//mas n aprendi a mexer com essa merda
-//hj 20/02/2024 terminei week 2 fzd 2 desafios e sendo derrotado
-//n me falta logica e comprender o problema mas saber mexer com 
-//A PORRA DESSA SINTAXE DE MERDA VTNC PORRA
-// N IMPORTA QUEM VSFD
+
 void crip(char palavra[], int key);
 void decrip(char palavra[], int key);
 
