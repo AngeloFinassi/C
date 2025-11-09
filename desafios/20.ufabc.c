@@ -1,58 +1,50 @@
 #include <stdio.h>
 #include <string.h>
 
-int MaioSeq(char frase[], char result[])
+int MaiorSeq(char frase[], char resultado[])
 {
-    int count = 1;
-    int max_count = 1;
-    int best_start_index = 0;
+    int max_len = 0;
+    int curr_len = 1;
+    int max_start_index = 0;
 
     for (size_t i = 1; i < strlen(frase); i++)
     {
         if (frase[i] == frase[i - 1])
         {
-            count++;
+            curr_len++;
         }
         else
-        {   
-            if (count > max_count)
-            {   
-                //qualquer sec, primeira seg, terc... n sendo a ultima
-                best_start_index = i - max_count;
-                max_count = count;
+        {
+            if (curr_len > max_len){
+                max_len = curr_len;
+                max_start_index = i - curr_len;
+                
             }
-            count = 1;
-        } 
+            curr_len = 1;
+        }
     }
-
-    //caso ultima seq é a maior
-    if (count > max_count)
+    if (curr_len > max_len)
     {
-        max_count = count;
-        best_start_index = strlen(frase) - max_count;
+        max_len = curr_len;
+        max_start_index = strlen(frase) - max_len;
     }
-
-    //copia em result 
-    for (int i = 0; i < max_count; i++)
+    
+    for (int c = 0; c < max_len; c++)
     {
-        result[i] = frase[best_start_index + i];
+        resultado[c] = frase[max_start_index + c];
     }
-    return max_count;
+    resultado[max_len] = '\0';
+    return max_len;
 }
 
 int main()
 {
 
-    char frase[100];
-    printf("Digite uma frase: ");
-    scanf("%99s", frase);
-
-    char result[100];
-    int max = MaioSeq(frase, result);
-
-    printf("\nSequencia mais longa: %s\n", result);
-    printf("Tamanho da sequencia: %d\n", max);
-
+    char frase[] = "aabbbbccc";
+    char resultado[100];
+    int len = MaiorSeq(frase, resultado);
+    printf("Maior sequencia: %s\n", resultado);
+    printf("Tamanho: %d\n", len);
     return 0;
 }
 
