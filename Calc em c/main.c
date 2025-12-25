@@ -16,6 +16,8 @@ int validarStringNumerica(const char *str);
 // Funcções para tratar leitura das variáveis
 void limparBuffer() {
     int c;
+    // le todos chars até encontrar quebra de linha ou fim de arquivo
+    // evitar bugs com scanf e fgets ou getchar
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
@@ -100,9 +102,10 @@ void imprimirMenu() {
     printf("3. Multiplicao (*)\n");
     printf("4. Divisao Inteira (/)\n");
     printf("5. Modulo (%%)\n");
-    printf("6. Fatorial (!)\n");
-    printf("7. Carregar operandos do arquivo\n");
-    printf("8. Sair\n");
+    printf("6. Ordenar Digitos (Quick sort)\n");
+    printf("7. Ordenar n Numeros (Insertion sort)\n");
+    printf("8. Carregar operandos do arquivo\n");
+    printf("9. Sair\n");
     printf("========================================\n");
 }
 
@@ -119,12 +122,12 @@ void operarTeclado() {
         return;
     }
     
-    if (opcao == 8) {
+    if (opcao == 9) {
         printf("Encerrando...\n");
         exit(0);
     }
     
-    if (opcao < 1 || opcao > 8) {
+    if (opcao < 1 || opcao > 9) {
         printf("\nOpcao inexistente.\n");
         return;
     }
@@ -132,7 +135,7 @@ void operarTeclado() {
     //Se passar do tratamento pula para as opções e redirecionamento pras funções
 
     //opcao arquivo
-    if (opcao == 7) {
+    if (opcao == 8) {
         char nomeArquivo[256];
         printf("Digite o nome do arquivo de entrada: ");
         if (fgets(nomeArquivo, sizeof(nomeArquivo), stdin) != NULL) {
@@ -142,9 +145,66 @@ void operarTeclado() {
         return;
     }
     
+    // Caso especial: Ordenação de números via insertion sort
+    if (opcao == 7) {
+        char buffer[MAX_INPUT];
+        int qtd;
+
+        if (!lerNumeroTeclado(buffer, "Digite a quantidade de numeros a serem ordenados: ")) {
+            return;
+        }
+
+        qtd = atoi(buffer);
+
+        if (qtd <= 0) {
+            printf("Quantidade invalida\n");
+            return;
+        }
+
+        Numero *vetor = malloc(qtd * sizeof(Numero));
+        if (!vetor) {
+            printf("Erro na alocacao da memoria\n");
+            return;
+        }
+
+        for (int i = 0; i < qtd; i++) {
+            printf("Digite o numero %d: ", i + 1);
+
+            if (fgets(buffer, MAX_INPUT, stdin) == NULL) {
+                for (int k = 0; k < i; k++) {
+                    liberarNumero(&vetor[k]);
+                }
+                free(vetor);
+                return;
+            }
+
+            trim(buffer);
+
+            if (!validarStringNumerica(buffer)) {
+                printf("Apenas numeros inteiros sao validos.\n");
+                i--;
+                continue;
+            }
+
+            vetor[i] = criarNumero(buffer);
+        }
+
+        insertionSortNumeros(vetor, qtd);
+
+        printf("\nNumeros ordenados:\n");
+        for (int i = 0; i < qtd; i++) {
+            imprimirNumero(vetor[i]);
+            printf("\n");
+        }
+
+        for (int i = 0; i < qtd; i++) {
+            liberarNumero(&vetor[i]);
+        }
+        free(vetor);
+        return;
+    }
+
     //Leitura do Primeiro Número
-    //O loop garante que o usuário fique preso aqui até digitar algo válido ou cancelar
-    //Mas para manter simples conforme seu fluxo, se errar, volta pro menu.
     if (!lerNumeroTeclado(buffer1, "Digite o primeiro numero: ")) {
         //Volta pro menu se falhar
         return;
@@ -152,13 +212,13 @@ void operarTeclado() {
     
     Numero num1 = criarNumero(buffer1);
     
-    //Caso Especial: Fatorial
+    //Caso Especial: Ordenação de dígitos via quick sort
     if (opcao == 6) {
-        printf("Calculando: ");
+        printf("Ordenando digitos de: ");
         imprimirNumero(num1);
-        printf("!\n");
+        printf("\n");
         
-        Numero resultado = fatorial(num1);
+        Numero resultado = ordenarNumero(num1);
         printf("Resultado: ");
         imprimirNumero(resultado);
         printf("\n");
@@ -229,7 +289,6 @@ void operarTeclado() {
     liberarNumero(&num2);
     liberarNumero(&resultado);
 }
-
 // Fluxo e leitura no caso do arquivo
 void operarArquivo(const char *nomeArquivo) {
     FILE *entrada = fopen(nomeArquivo, "r");
@@ -264,81 +323,221 @@ void operarArquivo(const char *nomeArquivo) {
         //linha vazia
         if (*ptr == '\0') continue;
         
-        char buffer1[MAX_INPUT], operacao[10], buffer2[MAX_INPUT];
+        // Cria uma cópia da linha para processar com strtok
+        char linhaCopia[MAX_INPUT];
+        strcpy(linhaCopia, linha);
         
-        // scanf retorna quantos itens conseguiu ler com sucesso
-        int campos = sscanf(linha, "%s %s %s", buffer1, operacao, buffer2);
+        // Conta tokens e verifica se o último é 'i'
+        char *tokens[1000];
+        int numTokens = 0;
+        char *token = strtok(linhaCopia, " \t\n");
         
-        if (campos != 3) {
-            fprintf(saida, "Linha %d: Formato incorreto. Esperado: NUM OP NUM\n", linhaNum);
-            printf("Aviso: Linha %d ignorada (formato invalido).\n", linhaNum);
+        while (token != NULL && numTokens < 1000) {
+            tokens[numTokens++] = token;
+            token = strtok(NULL, " \t\n");
+        }
+        
+        // Verifica se é insertion sort (último token é 'i')
+        if (numTokens >= 2 && strcmp(tokens[numTokens - 1], "i") == 0) {
+            
+            // É uma operação de insertion sort
+            int qtd = numTokens - 1; // Exclui o 'i' do final
+            Numero *numeros = malloc(qtd * sizeof(Numero));
+            
+            if (!numeros) {
+                fprintf(saida, "Linha %d: Erro de alocacao de memoria\n", linhaNum);
+                continue;
+            }
+            
+            int erro = 0;
+            
+            // Lê todos os números (exceto o último token que é 'i')
+            for (int k = 0; k < qtd; k++) {
+                // Imprime número na saída (antes da ordenação)
+                fprintf(saida, "%s ", tokens[k]);
+                
+                // Valida se é número
+                if (!validarStringNumerica(tokens[k])) {
+                    fprintf(saida, "ERRO: Token invalido '%s'\n", tokens[k]);
+                    erro = 1;
+                    break;
+                }
+                
+                numeros[k] = criarNumero(tokens[k]);
+            }
+            
+            if (erro) {
+                // Libera números já criados
+                for (int k = 0; k < qtd; k++) {
+                    liberarNumero(&numeros[k]);
+                }
+                free(numeros);
+                continue;
+            }
+            
+            // Imprime o 'i'
+            fprintf(saida, "i = ");
+            
+            // Ordena os números
+            insertionSortNumeros(numeros, qtd);
+            
+            // Imprime resultado
+            for (int k = 0; k < qtd; k++) {
+                if (numeros[k].sinal == -1) fprintf(saida, "-");
+                if (numeros[k].tamanho == 0) {
+                    fprintf(saida, "0");
+                } else {
+                    for (int j = numeros[k].tamanho - 1; j >= 0; j--) {
+                        fprintf(saida, "%d", numeros[k].digitos[j]);
+                    }
+                }
+                if (k < qtd - 1) fprintf(saida, " ");
+            }
+            fprintf(saida, "\n");
+            
+            // Libera memória
+            for (int k = 0; k < qtd; k++) {
+                liberarNumero(&numeros[k]);
+            }
+            free(numeros);
+            
+            operacoesProcessadas++;
             continue;
         }
-        
-        // Validação básica dos números lidos do arquivo
-        if (!validarStringNumerica(buffer1) || !validarStringNumerica(buffer2)) {
-             fprintf(saida, "Linha %d: Operandos invalidos (devem ser inteiros)\n", linhaNum);
-             continue;
-        }
 
-        Numero num1 = criarNumero(buffer1);
-        Numero num2 = criarNumero(buffer2);
+        // Variáveis temporárias para a tentativa de leitura
+        char t_tok1[MAX_INPUT], t_tok2[MAX_INPUT], t_tok3[MAX_INPUT];
+        int campos;
+        
         Numero resultado;
-        
-        fprintf(saida, "%s %s %s = ", buffer1, operacao, buffer2);
-        
         int operacaoValida = 1;
         
-        switch (operacao[0]) {
-            // Semelhante ao operar teclado, mas no formato esperado do arquivo
-            case '+': resultado = somar(num1, num2); break;
-            case '-': resultado = subtrair(num1, num2); break;
-            case '*': resultado = multiplicar(num1, num2); break;
-            case '/': 
-                // Validação de divisão por zero
-                if (num2.tamanho == 1 && num2.digitos[0] == 0) {
-                    fprintf(saida, "ERRO: Divisao por zero\n");
-                    operacaoValida = 0;
-                } else {
-                    resultado = dividir(num1, num2); 
-                }
-                break;
-            case '%': 
-                if (num2.tamanho == 1 && num2.digitos[0] == 0) {
-                    fprintf(saida, "ERRO: Modulo por zero\n");
-                    operacaoValida = 0;
-                } else {
-                    resultado = modulo(num1, num2);
-                }
-                break;
-            //Caso n encontre nenhuma operação valida
-            default:
-                fprintf(saida, "ERRO: Operacao desconhecida '%s'\n", operacao);
-                operacaoValida = 0;
-        }
-        
-        if (operacaoValida) {
-            // Imprime no arquivo
-            //struct Numero espera só o int, precisa escrever o sinal antes
-            if (resultado.sinal == -1) fprintf(saida, "-");
+        // --- 1. TENTA LER FORMATO BINÁRIO (3 TOKENS: NUM OP NUM) ---
+        // Prioriza a leitura binária para resolver o conflito com números grandes.
+        campos = sscanf(linha, "%s %s %s", t_tok1, t_tok2, t_tok3);
+
+        if (campos == 3) {
+            // É uma operação binária, agora precisamos garantir que o TOKEN 2 é um operador
             
-            // Loop reverso para imprimir corretamente
-            //seguindo padrão de guardar numeros grandes de forma invertida
-            //leitura deve seguir o memsmo
-            if (resultado.tamanho == 0) fprintf(saida, "0");
-            else {
-                for (int i = resultado.tamanho - 1; i >= 0; i--) {
-                    fprintf(saida, "%d", resultado.digitos[i]);
+            if (t_tok2[0] == '+' || t_tok2[0] == '-' || t_tok2[0] == '*' || t_tok2[0] == '/' || t_tok2[0] == '%') {
+                
+                // Formato Binário Válido
+                if (!validarStringNumerica(t_tok1) || !validarStringNumerica(t_tok3)) {
+                     fprintf(saida, "Linha %d: Operandos invalidos (devem ser inteiros)\n", linhaNum);
+                     continue;
                 }
+
+                Numero num1 = criarNumero(t_tok1);
+                Numero num2 = criarNumero(t_tok3);
+                
+                fprintf(saida, "%s %s %s = ", t_tok1, t_tok2, t_tok3);
+                
+                switch (t_tok2[0]) {
+                    case '+': resultado = somar(num1, num2); break;
+                    case '-': resultado = subtrair(num1, num2); break;
+                    case '*': resultado = multiplicar(num1, num2); break;
+                    case '/': 
+                        if (num2.tamanho == 1 && num2.digitos[0] == 0) {
+                            fprintf(saida, "ERRO: Divisao por zero\n");
+                            operacaoValida = 0;
+                        } else { resultado = dividir(num1, num2); }
+                        break;
+                    case '%': 
+                        if (num2.tamanho == 1 && num2.digitos[0] == 0) {
+                            fprintf(saida, "ERRO: Modulo por zero\n");
+                            operacaoValida = 0;
+                        } else { resultado = modulo(num1, num2); }
+                        break;
+                    default:
+                        // Este caso não deve ocorrer devido ao 'if' anterior
+                        fprintf(saida, "ERRO: Operacao desconhecida '%s'\n", t_tok2);
+                        operacaoValida = 0;
+                }
+                
+                if (operacaoValida) {
+                    if (resultado.sinal == -1) fprintf(saida, "-");
+                    if (resultado.tamanho == 0) fprintf(saida, "0");
+                    else {
+                        for (int i = resultado.tamanho - 1; i >= 0; i--) {
+                            fprintf(saida, "%d", resultado.digitos[i]);
+                        }
+                    }
+                    fprintf(saida, "\n");
+                    liberarNumero(&resultado);
+                    operacoesProcessadas++;
+                }
+                
+                liberarNumero(&num1);
+                liberarNumero(&num2);
+                
+            } else {
+                // 3 tokens, mas o token do meio não é um operador.
+                goto formato_invalido;
             }
-            //rodou tudo fecha arquivo e liberar vars utilizadas
-            fprintf(saida, "\n");
-            liberarNumero(&resultado);
-            operacoesProcessadas++;
+
+        } 
+        
+        // --- 2. TENTA LER FORMATO QUICKSORT (2 TOKENS: OP NUM ou NUM OP) ---
+        else if (campos == 2) {
+            
+            // Tentativa de leitura no formato OP NUM (antigo: quicksort 123)
+            int is_qs_op_num = (strcmp(t_tok1, "quicksort") == 0);
+            
+            // Tentativa de leitura no formato NUM OP (novo: 123 o)
+            int is_qs_num_op = (strcmp(t_tok2, "o") == 0);
+            
+            if (is_qs_op_num || is_qs_num_op) {
+                
+                char *num_str;
+                char *op_str;
+                
+                // Determina qual token é o número e qual é o operador
+                if (is_qs_op_num) {
+                    op_str = t_tok1;
+                    num_str = t_tok2;
+                } else { // is_qs_num_op
+                    op_str = t_tok2;
+                    num_str = t_tok1;
+                }
+                
+                if (!validarStringNumerica(num_str)) {
+                    fprintf(saida, "Linha %d: Operando invalido para quicksort (deve ser inteiro)\n", linhaNum);
+                    printf("Aviso: Linha %d ignorada (operando invalido para quicksort).\n", linhaNum);
+                    goto fim_linha;
+                }
+                
+                Numero num1 = criarNumero(num_str);
+                
+                fprintf(saida, "%s %s = ", num_str, op_str); // Imprime na ordem correta
+                resultado = ordenarNumero(num1);
+                
+                // Imprime no arquivo o resultado
+                if (resultado.sinal == -1) fprintf(saida, "-");
+                if (resultado.tamanho == 0) fprintf(saida, "0");
+                else {
+                    for (int i = resultado.tamanho - 1; i >= 0; i--) {
+                        fprintf(saida, "%d", resultado.digitos[i]);
+                    }
+                }
+                
+                fprintf(saida, "\n");
+                liberarNumero(&num1);
+                liberarNumero(&resultado);
+                operacoesProcessadas++;
+                goto fim_linha;
+            } else {
+                goto formato_invalido;
+            }
+        } 
+        
+        // --- 3. FORMATO INVÁLIDO OU OUTROS ERROS ---
+        else {
+            formato_invalido:
+            fprintf(saida, "Linha %d: Formato incorreto. Esperado: NUM OP NUM, quicksort NUM ou NUM o ou i NUM1 NUM2 ...\n", linhaNum);
+            printf("Aviso: Linha %d ignorada (formato invalido).\n", linhaNum);
         }
         
-        liberarNumero(&num1);
-        liberarNumero(&num2);
+        fim_linha:; // Label para pular para o fim do processamento da linha
     }
     
     fclose(entrada);
@@ -348,10 +547,10 @@ void operarArquivo(const char *nomeArquivo) {
     printf("Verifique o arquivo 'resultado.txt'.\n");
 }
 
-//Funcao principal que chama o menu e inicia o programa
+
 int main(int argc, char *argv[]) {
     printf("========================================\n");
-    printf("  Bem-vindo a Calculado do Grupo 13!    \n");
+    printf("  Bem-vindo a Calculadora do Grupo 13!    \n");
     printf("========================================\n\n");
     
     if (argc > 1) {

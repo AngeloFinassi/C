@@ -263,44 +263,70 @@ Numero modulo(Numero a, Numero b) {
     return resto;
 }
 
-//Operação personalizada: Fatorial
-//Limite: números até 10.000
-Numero fatorial(Numero n) {
-    // Verifica se é negativo
-    if (n.sinal == -1) {
-        printf("Erro: fatorial de numero negativo!\n");
-        return criarNumero("0");
+// implementando o quicksort
+static void swap(int* a, int* b) {
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
+
+// arruma para ordem crescente ao devolver p usuário
+static int partition(int arr[], int low, int high) {
+    int pivot = arr[high]; 
+    int i = (low - 1); 
+  
+    for (int j = low; j <= high - 1; j++) {
+        if (arr[j] > pivot) { 
+            i++; 
+            swap(&arr[i], &arr[j]); 
+        } 
+    } 
+    swap(&arr[i + 1], &arr[high]); 
+    return (i + 1); 
+}
+
+static void quickSortRec(int arr[], int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+        quickSortRec(arr, low, pi - 1);
+        quickSortRec(arr, pi + 1, high);
+    }
+}
+
+//Função para ordenar os dígitos usando QuickSort
+Numero ordenarNumero(Numero n) {
+    Numero ordenada = copiarNumero(n);
+    
+    if (ordenada.tamanho <= 1) {
+        return ordenada;
     }
     
-    // Verifica se é muito grande
-    if (n.tamanho > 5) {
-        printf("Erro: numero muito grande para fatorial (limite: 10.000)!\n");
-        return criarNumero("0");
+    quickSortRec(ordenada.digitos, 0, ordenada.tamanho - 1);
+    
+    return ordenada;
+}
+
+// Implementação do insertion sort
+void insertionSortNumeros(Numero *arr, int n) {
+    for (int i = 1; i < n; i++) {
+        Numero key = arr[i];
+        int j = i - 1;
+
+        while (j >= 0) {
+            int cmp;
+            
+            if (arr[j].sinal != key.sinal) cmp = (arr[j].sinal < key.sinal) ? -1 : 1;
+            else {
+                cmp = compararAbsoluto(arr[j], key);
+                if (arr[j].sinal == -1) cmp = -cmp;
+            }
+            
+            if (cmp <= 0) break;
+            
+            arr[j + 1] = arr[j];
+            j--;
+        }
+
+        arr[j + 1] = key;
     }
-    
-    // Converte para inteiro normal
-    int valor = 0;
-    for (int i = n.tamanho - 1; i >= 0; i--) {
-        valor = valor * 10 + n.digitos[i];
-    }
-    
-    if (valor > 10000) {
-        printf("Erro: fatorial limitado a 10.000!\n");
-        return criarNumero("0");
-    }
-    
-    Numero resultado = criarNumero("1");
-    
-    for (int i = 2; i <= valor; i++) {
-        char buffer[20];
-        sprintf(buffer, "%d", i);
-        Numero fator = criarNumero(buffer);
-        
-        Numero temp = multiplicar(resultado, fator);
-        liberarNumero(&resultado);
-        liberarNumero(&fator);
-        resultado = temp;
-    }
-    
-    return resultado;
 }
